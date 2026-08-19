@@ -1,0 +1,9 @@
+flask
+rdkit
+torch
+scikit-learn
+pandas
+numpy
+matplotlib
+joblib
+jupyter

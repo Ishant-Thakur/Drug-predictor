@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Molecular Property Predictor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,470;9..144,560;9..144,650&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="sheet">
+
+        <!-- Header -->
+
+        <header class="masthead">
+            <div class="masthead-row">
+                <span class="eyebrow">Sample Analysis &middot; In&nbsp;Silico</span>
+                <span class="eyebrow eyebrow-right">RDKit &middot; PyTorch &middot; Multi-Task Model</span>
+            </div>
+
+            <h1>Molecular&nbsp;Property<br>Predictor</h1>
+
+            <p class="lede">
+                Enter a molecule as a SMILES string. One shared model returns
+                three readouts at once&nbsp;&mdash; aqueous solubility, blood&#8211;brain
+                barrier permeability, and toxicity risk.
+            </p>
+        </header>
+
+
+        <!-- Input -->
+
+        <section class="intake">
+
+            <form method="POST">
+
+                <label for="smiles">Smiles Input</label>
+
+                <input
+                    type="text"
+                    id="smiles"
+                    name="smiles"
+                    value="{{ smiles }}"
+                    placeholder="e.g.&nbsp; CCO"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+
+                <button type="submit">Run&nbsp;Analysis&nbsp;&rarr;</button>
+
+            </form>
+
+            <div class="examples">
+                <span>Try&nbsp;&mdash;</span>
+                <button type="button" onclick="setSMILES('CCO')">Ethanol</button>
+                <button type="button" onclick="setSMILES('CC(=O)O')">Acetic&nbsp;Acid</button>
+                <button type="button" onclick="setSMILES('c1ccccc1')">Benzene</button>
+                <button type="button" onclick="setSMILES('CC(=O)Oc1ccccc1C(=O)O')">Aspirin</button>
+                <button type="button" onclick="setSMILES('CN1CCC[C@H]1c1cccnc1')">Nicotine</button>
+            </div>
+
+        </section>
+
+
+        <!-- Error -->
+
+        {% if error %}
+        <div class="error">
+            <span class="error-label">Error&nbsp;&mdash;</span> {{ error }}
+        </div>
+        {% endif %}
+
+
+        <!-- Results -->
+
+        {% if result %}
+
+        <section class="ticket">
+
+            <div class="ticket-head">
+                <span>Specimen&nbsp;&mdash; <code>{{ smiles }}</code></span>
+                <span class="ticket-stamp">Analyzed &#10003;</span>
+            </div>
+
+            <div class="ticket-body">
+
+                <div class="panel">
+                    <span class="panel-label">01 &mdash; Solubility</span>
+                    <div class="panel-value">{{ result.predicted_logS }}</div>
+                    <span class="panel-unit">predicted log&thinsp;S (mol/L)</span>
+                </div>
+
+                <div class="panel">
+                    <span class="panel-label">02 &mdash; BBB Permeability</span>
+                    <div class="panel-value panel-value--word">{{ result.bbb_label }}</div>
+                    <span class="panel-unit">confidence &mdash; {{ result.bbb_probability }}%</span>
+                </div>
+
+                <div class="panel">
+                    <span class="panel-label">03 &mdash; Toxicity Risk</span>
+                    <div class="panel-value panel-value--word">{{ result.toxicity_label }}</div>
+                    <span class="panel-unit">confidence &mdash; {{ result.toxicity_probability }}%</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="datasheet">
+
+            <h2>Molecular Descriptors</h2>
+
+            <div class="datasheet-grid">
+
+                <div class="row">
+                    <span class="k">Molecular Weight</span>
+                    <span class="v">{{ "%.3f"|format(result.descriptors.Molecular_Weight) }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">LogP</span>
+                    <span class="v">{{ "%.3f"|format(result.descriptors.LogP) }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">TPSA</span>
+                    <span class="v">{{ "%.3f"|format(result.descriptors.TPSA) }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">H-Bond Donors</span>
+                    <span class="v">{{ result.descriptors.H_Bond_Donors }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">H-Bond Acceptors</span>
+                    <span class="v">{{ result.descriptors.H_Bond_Acceptors }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Rotatable Bonds</span>
+                    <span class="v">{{ result.descriptors.Rotatable_Bonds }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Ring Count</span>
+                    <span class="v">{{ result.descriptors.Ring_Count }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Aromatic Rings</span>
+                    <span class="v">{{ result.descriptors.Aromatic_Rings }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Heavy Atoms</span>
+                    <span class="v">{{ result.descriptors.Heavy_Atom_Count }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Heteroatoms</span>
+                    <span class="v">{{ result.descriptors.Num_Heteroatoms }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Fraction Csp3</span>
+                    <span class="v">{{ "%.3f"|format(result.descriptors.Fraction_CSP3) }}</span>
+                </div>
+
+                <div class="row">
+                    <span class="k">Molar Refractivity</span>
+                    <span class="v">{{ "%.3f"|format(result.descriptors.Molar_Refractivity) }}</span>
+                </div>
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+
+        <footer>
+            <p>Trained on AqSolDB &middot; BBBP &middot; Tox21 &mdash; ~16,000 molecules, one shared model.</p>
+            <p class="disclaimer">
+                Predictions are generated by a machine learning model and should not
+                be treated as experimental measurements or medical advice.
+            </p>
+        </footer>
+
+    </div>
+
+
+    <script>
+        function setSMILES(value) {
+            document.getElementById("smiles").value = value;
+        }
+    </script>
+
+</body>
+
+</html>
